@@ -1,6 +1,7 @@
 import { Telegraf } from "telegraf";
 import { OpenAI } from "openai";
 import { Console } from "console";
+import { response } from "express";
 
 // AI AREA
 const openai = new OpenAI({
@@ -13,18 +14,22 @@ const textGen = async function (userMessage) {
     model: "gpt-3.5-turbo",
   });
 
-  console.log(completion.choices[0]);
+  //   console.log(completion.choices[0].message.content);
+  return completion.choices[0].message.content;
+  // console.log(completion.choices[0]);
 };
 
 // textGen();
 // New branch
 // BOT AREA
-const bot = new Telegraf("6913146166:AAHb7hpIPQLuRJVpXoU573slCF90ay7GEjk");
-bot.on("message", (ctx) => {
+const bot = new Telegraf("6929692133:AAE1LCO5Fgf4aDm84FBUrNN8CkaJ2Dn3wZk");
+bot.on("message", async (ctx) => {
   const userMessage = ctx.update.message.text;
-  let aiResponse = textGen(userMessage);
+  textGen(userMessage).then((response) => ctx.reply(response));
+
+  //   await aiResponse.then((result) => console.log(result.data));
   //   ctx.reply(aiResponse);
-  console.log(aiResponse);
+  //   console.log(aiResponse);
 });
 
 bot.launch();
