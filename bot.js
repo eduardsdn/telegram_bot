@@ -1,4 +1,4 @@
-import { Telegraf, Input } from "telegraf";
+import { Telegraf, Markup } from "telegraf";
 import { OpenAI } from "openai";
 import path from "path";
 import fs from "fs";
@@ -19,10 +19,8 @@ const textGen = async function (userMessage) {
   return completion.choices[0].message.content;
 };
 
-// textGen();
-
 let pathToSpeechFile = "";
-// generate auidio form text
+// generate auidio from generated text response
 const audioGen = async function (textForTranslation) {
   const file = fs.cre;
   console.log(textForTranslation);
@@ -37,37 +35,85 @@ const audioGen = async function (textForTranslation) {
   return pathToSpeechFile;
 };
 
-// audioGen("Hello, i can talk");
+// BOT
 
-// response.stream_to_file(speech_file_path);
+// Global variables
+let chatFromat = "text";
 
-// bot
+// Creating a bot instance
 const bot = new Telegraf("6929692133:AAE1LCO5Fgf4aDm84FBUrNN8CkaJ2Dn3wZk");
+// Handling /start
+bot.start((ctx) =>
+  ctx.reply(
+    "Welcome! I am your art guide, please let me now how you would like to interact with me!",
+    chooseChatFormatMenu
+  )
+);
+
+// Menu for choosing bot response Format
+const chooseChatFormatMenu = Markup.inlineKeyboard([
+  [{ text: "Text", callback_data: "changeFormatText" }],
+  [{ text: "Voice", callback_data: "changeFormatVoice" }],
+]);
+
+// Event handling for chooseChatFormatMenu buttons
+bot.on("callback_query", (ctx) => {
+  const callbackData = ctx.callbackQuery.data;
+
+  // Perform actions based on the callback data
+  switch (callbackData) {
+    case "changeFormatVoice":
+      changeChatFormat("voice");
+      console.log(chatFromat);
+      break;
+
+    case "changeFormatText":
+      changeChatFormat("text");
+      console.log(chatFromat);
+      break;
+
+    default:
+      ctx.answerCbQuery("Invalid button");
+  }
+});
+
+// Listen to user messages and initiate reply based on current chat format
 bot.on("message", async (ctx) => {
   const userMessage = ctx.update.message.text;
-  console.log(userMessage);
+
+  if (chatFromat === "text") {
+    replyWithText(ctx, userMessage);
+  } else if (chatFromat === "voice") {
+    replyWithVoice(ctx, userMessage);
+  }
+});
+
+// Reply with voice message
+function replyWithVoice(ctx, userMessage) {
   textGen(
     `Вы - гид по искусству под названием Gallery Genius, ваша цель - предоставить увлекательную информацию о картинах. Пользователи сообщат вам название, автора и год создания картины на разных языках, и на основе этих данных вы найдете картину и интересную информацию, связанную с ней. Вы будете выступать в роли дружелюбного гида, увлеченного искусством и своей работой. Если пользователь предоставляет вам что-то, но не название картины, имя автора или год создания, вы всегда будете писать короткое сообщение с просьбой указать имя и должность художника, чтобы помочь в поиске, и не отвечать на вопросы, которые не связаны с искусством. Если у вас нет никакой информации об этой картине или вы не уверены в достоверности информации, вы сообщите ее пользователю. Ваша цель - обучить и обогатить понимание искусства пользователем с помощью подробной и точной информации, в приоритете вы будете использовать информацию из таких источников, как Google Arts & Culture, Чикагский институт искусств, Artcyclopedia, WikiArt, Поиск коллекций Национальной галереи искусств, изображения открытого доступа Национальной галереи искусств, однако вы также можете использовать и другие источники. Вы ответите на языке, который использовался пользователем. Вот данные от пользователя:${userMessage}`
   ).then((response) => {
     audioGen(response).then((response) => {
       console.log(response);
-      const filePath = `./${response}`;
+      const filePath = response;
       ctx.telegram.sendVoice(ctx.chat.id, { source: filePath });
     });
   });
-});
+}
+
+// Reply with text message
+function replyWithText(ctx, userMessage) {
+  textGen(
+    `Вы - гид по искусству под названием Gallery Genius, ваша цель - предоставить увлекательную информацию о картинах. Пользователи сообщат вам название, автора и год создания картины на разных языках, и на основе этих данных вы найдете картину и интересную информацию, связанную с ней. Вы будете выступать в роли дружелюбного гида, увлеченного искусством и своей работой. Если пользователь предоставляет вам что-то, но не название картины, имя автора или год создания, вы всегда будете писать короткое сообщение с просьбой указать имя и должность художника, чтобы помочь в поиске, и не отвечать на вопросы, которые не связаны с искусством. Если у вас нет никакой информации об этой картине или вы не уверены в достоверности информации, вы сообщите ее пользователю. Ваша цель - обучить и обогатить понимание искусства пользователем с помощью подробной и точной информации, в приоритете вы будете использовать информацию из таких источников, как Google Arts & Culture, Чикагский институт искусств, Artcyclopedia, WikiArt, Поиск коллекций Национальной галереи искусств, изображения открытого доступа Национальной галереи искусств, однако вы также можете использовать и другие источники. Вы ответите на языке, который использовался пользователем. Вот данные от пользователя:${userMessage}`
+  ).then((response) => {
+    console.log(response);
+    ctx.reply(response);
+  });
+}
+
+// Change chat Format
+async function changeChatFormat(format) {
+  chatFromat = format;
+}
 
 bot.launch();
-
-// ctx.telegram.sendAudio(ctx.chat.id, {
-//   source: `./${response}`,
-//   filename: "Your information.mp3",
-// });
-
-// fs.unlink(filePath, (err) => {
-//   if (err) {
-//     console.error(err);
-//   } else {
-//     console.log("File is deleted.");
-//   }
-// });
