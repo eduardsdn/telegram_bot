@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 
-// openai
+// openai (Move to .env)
 const openai = new OpenAI({
   apiKey: "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",
 });
@@ -40,15 +40,31 @@ const audioGen = async function (textForTranslation) {
 // Global variables
 let chatFromat = "text";
 
-// Creating a bot instance
+// Connect to bot with token (Move to .env)
 const bot = new Telegraf("6929692133:AAE1LCO5Fgf4aDm84FBUrNN8CkaJ2Dn3wZk");
-// Handling /start
-bot.start((ctx) =>
+
+// Defining command menu
+bot.telegram.setMyCommands([
+  { command: "/start", description: "Welcome message" },
+  { command: "/info", description: "Get info about functionality" },
+  { command: "/format", description: "Change chat Format" },
+]);
+
+// Handling commands
+bot.command("start", (ctx) =>
   ctx.reply(
-    "Welcome! I am your art guide, please let me now how you would like to interact with me!",
-    chooseChatFormatMenu
+    "Welcome! I am your art guide, please let me know author, painting or anything related to art and I will provie you information. Checkout the menu to see my settings!"
   )
 );
+bot.command("info", (ctx) => {
+  ctx.reply(
+    "I am your art guide, please let me know the author, painting or anything related to art and I will provie you information"
+  );
+});
+bot.command("format", (ctx) => {
+  "Please choose how you want to recieve your information";
+  ctx.reply("Please pick chat format", chooseChatFormatMenu);
+});
 
 // Menu for choosing bot response Format
 const chooseChatFormatMenu = Markup.inlineKeyboard([
@@ -116,4 +132,5 @@ async function changeChatFormat(format) {
   chatFromat = format;
 }
 
+// Launch bot
 bot.launch();
