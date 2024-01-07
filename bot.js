@@ -4,6 +4,10 @@ import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 
+// Global variables
+let chatFromat = "text";
+let voiceType = "alloy";
+
 // openai (Move to .env)
 const openai = new OpenAI({
   apiKey: "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",
@@ -26,7 +30,7 @@ const audioGen = async function (textForTranslation) {
   console.log(textForTranslation);
   const audio = await openai.audio.speech.create({
     model: "tts-1",
-    voice: "alloy",
+    voice: voiceType,
     input: textForTranslation,
   });
   pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
@@ -37,9 +41,6 @@ const audioGen = async function (textForTranslation) {
 
 // BOT
 
-// Global variables
-let chatFromat = "text";
-
 // Connect to bot with token (Move to .env)
 const bot = new Telegraf("6929692133:AAE1LCO5Fgf4aDm84FBUrNN8CkaJ2Dn3wZk");
 
@@ -48,6 +49,7 @@ bot.telegram.setMyCommands([
   { command: "/start", description: "Welcome message" },
   { command: "/info", description: "Get info about functionality" },
   { command: "/format", description: "Change chat Format" },
+  { command: "/changevoice", description: "Change voice of voice messages" },
 ]);
 
 // Handling commands
@@ -65,11 +67,23 @@ bot.command("format", (ctx) => {
   "Please choose how you want to recieve your information";
   ctx.reply("Please pick chat format", chooseChatFormatMenu);
 });
+bot.command("changevoice", (ctx) => {
+  ctx.reply("Please pick a voice", chooseVoiceMenu);
+});
 
+// Menus
 // Menu for choosing bot response Format
 const chooseChatFormatMenu = Markup.inlineKeyboard([
   [{ text: "Text", callback_data: "changeFormatText" }],
   [{ text: "Voice", callback_data: "changeFormatVoice" }],
+]);
+const chooseVoiceMenu = Markup.inlineKeyboard([
+  [{ text: "Alloy", callback_data: "changeVoiceAlloy" }],
+  [{ text: "Echo", callback_data: "changeVoiceEcho" }],
+  [{ text: "Fable", callback_data: "changeVoiceFable" }],
+  [{ text: "Onyx", callback_data: "changeVoiceOnyx" }],
+  [{ text: "Nova", callback_data: "changeVoiceNova" }],
+  [{ text: "Shimmer", callback_data: "changeVoiceShimmer" }],
 ]);
 
 // Event handling for chooseChatFormatMenu buttons
@@ -90,6 +104,36 @@ bot.on("callback_query", (ctx) => {
 
     default:
       ctx.answerCbQuery("Invalid button");
+  }
+
+  switch (callbackData) {
+    case "changeVoiceAlloy":
+      changeVoiceType("alloy");
+      console.log(voiceType);
+      break;
+
+    case "changeVoiceEcho":
+      changeVoiceType("echo");
+      console.log(voiceType);
+      break;
+    case "changeVoiceFable":
+      changeChatFormat("fable");
+      console.log(voiceType);
+      break;
+
+    case "changeVoiceOnyx":
+      changeVoiceType("onyx");
+      console.log(voiceType);
+      break;
+    case "changeVoiceNova":
+      changeVoiceType("nova");
+      console.log(voiceType);
+      break;
+
+    case "changeVoiceShimmer":
+      changeVoiceType("shimmer");
+      console.log(voiceType);
+      break;
   }
 });
 
@@ -130,6 +174,10 @@ function replyWithText(ctx, userMessage) {
 // Change chat Format
 async function changeChatFormat(format) {
   chatFromat = format;
+}
+
+async function changeVoiceType(voice) {
+  voiceType = voice;
 }
 
 // Launch bot
