@@ -3,10 +3,15 @@ import { OpenAI } from "openai";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const openAIkey = process.env.OPENAI_KEY;
 
 // openai (Move key to .env)
 const openai = new OpenAI({
-  apiKey: "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",
+  apiKey: openAIkey,
 });
 
 // generate response to user message
