@@ -1,17 +1,21 @@
 import "dotenv/config";
 import { Telegraf } from "telegraf";
-
+import dotenv from "dotenv";
 import { textGen, audioGen } from "./openai.js"; //openAI functions
 import { chooseChatFormatMenu, chooseVoiceMenu } from "./menus.js"; //Menus
-
 import { prompts } from "./prompts.js";
+import { nextTick } from "process";
+
+dotenv.config();
+
+const telegramToken = process.env.TELEGRAM_TOKEN;
 
 // Global variables
 let chatFromat = "text";
 let voiceType = "alloy"; // STUPID! HADLE WITH DATABASE RECORD!
 
 // Connect to bot (Move token to .env)
-const bot = new Telegraf("6929692133:AAE1LCO5Fgf4aDm84FBUrNN8CkaJ2Dn3wZk");
+const bot = new Telegraf(telegramToken);
 
 // Defining command menu
 bot.telegram.setMyCommands([
@@ -22,87 +26,97 @@ bot.telegram.setMyCommands([
 ]);
 
 // Handling commands
-bot.command("start", (ctx) =>
-  ctx.reply(
-    "Welcome! I am your art guide, please let me know author, painting or anything related to art and I will provie you information. Checkout the menu to see my settings!"
-  )
+bot.command(
+  "start",
+  async (ctx) =>
+    await ctx.reply(
+      "Welcome! I am your art guide, please let me know author, painting or anything related to art and I will provie you information. Checkout the menu to see my settings!"
+    )
 );
-bot.command("info", (ctx) => {
-  ctx.reply(
+bot.command("info", async (ctx) => {
+  await ctx.reply(
     "I am your art guide, please let me know the author, painting or anything related to art and I will provie you information"
   );
 });
-bot.command("format", (ctx) => {
+bot.command("format", async (ctx) => {
   "Please choose how you want to recieve your information";
-  ctx.reply("Please pick chat format", chooseChatFormatMenu);
+  await ctx.reply("Please pick chat format", chooseChatFormatMenu);
 });
-bot.command("changevoice", (ctx) => {
-  ctx.reply("Please pick a voice", chooseVoiceMenu);
+bot.command("changevoice", async (ctx) => {
+  await ctx.reply("Please pick a voice", chooseVoiceMenu);
 });
 
 // Event handling for chooseChatFormatMenu buttons
-bot.on("callback_query", (ctx) => {
+bot.on("callback_query", async (ctx) => {
   const callbackData = ctx.callbackQuery.data;
 
   // }
-  // CHECK
+  // CHECK FOR LOADING STATE FOR BUTTONS BUG
   switch (callbackData) {
     case "changeFormatVoice":
       changeChatFormat("voice");
+      await ctx.answerCbQuery("Формат чата изменён на голосовые сообщения");
       console.log(chatFromat);
       break;
 
     case "changeFormatText":
       changeChatFormat("text");
+      await ctx.answerCbQuery("Формат чата изменён на текстовые сообщения");
       console.log(chatFromat);
       break;
 
     case "changeVoiceAlloy":
       changeVoiceType("alloy");
+      await ctx.answerCbQuery("Голос изменён на Alloy");
       console.log(voiceType);
       break;
 
     case "changeVoiceEcho":
       changeVoiceType("echo");
+      await ctx.answerCbQuery("Голос изменён на Echo");
       console.log(voiceType);
       break;
     case "changeVoiceFable":
+      await ctx.answerCbQuery("Голос изменён на Fable");
       changeChatFormat("fable");
       console.log(voiceType);
       break;
 
     case "changeVoiceOnyx":
+      await ctx.answerCbQuery("Голос изменён на Onyx");
       changeVoiceType("onyx");
       console.log(voiceType);
       break;
     case "changeVoiceNova":
       changeVoiceType("nova");
+      await ctx.answerCbQuery("Голос изменён на Нова");
       console.log(voiceType);
       break;
 
     case "changeVoiceShimmer":
       changeVoiceType("shimmer");
+      await ctx.answerCbQuery("Голос изменён на Шиммер");
       console.log(voiceType);
       break;
 
     default:
-      ctx.answerCbQuery("Invalid button");
+      await ctx.answerCbQuery("Недействительная кнопка");
   }
 });
 
-// Listen to user messages and initiate reply based on current chat format
+// Listen to user messages and reply based on current chat format
 bot.on("message", async (ctx) => {
   const userMessage = ctx.update.message.text;
   console.log(userMessage);
   if (chatFromat === "text") {
-    replyWithText(ctx, userMessage);
+    await replyWithText(ctx, userMessage);
   } else if (chatFromat === "voice") {
-    replyWithVoice(ctx, userMessage);
+    await replyWithVoice(ctx, userMessage);
   }
 });
 
 // Reply with voice message
-function replyWithVoice(ctx, userMessage) {
+async function replyWithVoice(ctx, userMessage) {
   textGen(`${prompts.detailedPrompt}${userMessage}`).then((response) => {
     console.log(response);
     audioGen(response, voiceType).then((response) => {
@@ -114,7 +128,7 @@ function replyWithVoice(ctx, userMessage) {
 }
 
 // Reply with text message
-function replyWithText(ctx, userMessage) {
+async function replyWithText(ctx, userMessage) {
   textGen(`${prompts.detailedPrompt}${userMessage}`).then((response) => {
     console.log(response);
     ctx.reply(response);
