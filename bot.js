@@ -12,7 +12,7 @@ const telegramToken = process.env.TELEGRAM_TOKEN;
 
 // Global variables
 let chatFromat = "text";
-let voiceType = "alloy"; // STUPID! HADLE WITH DATABASE RECORD!
+let voiceType = "alloy"; // STUPID! HANDLE WITH DATABASE RECORDS!
 
 // Connect to bot (Move token to .env)
 const bot = new Telegraf(telegramToken);
@@ -111,13 +111,13 @@ bot.on("message", async (ctx) => {
   if (chatFromat === "text") {
     await replyWithText(ctx, userMessage);
   } else if (chatFromat === "voice") {
-    await replyWithVoice(ctx, userMessage);
+    replyWithVoice(ctx, userMessage);
   }
 });
 
 // Reply with voice message
 async function replyWithVoice(ctx, userMessage) {
-  textGen(`${prompts.detailedPrompt}${userMessage}`).then((response) => {
+  textGen(`${prompts.detailedPrompt}${userMessage}`).then(async (response) => {
     console.log(response);
     audioGen(response, voiceType).then((response) => {
       const filePath = response;
@@ -129,7 +129,7 @@ async function replyWithVoice(ctx, userMessage) {
 
 // Reply with text message
 async function replyWithText(ctx, userMessage) {
-  textGen(`${prompts.detailedPrompt}${userMessage}`).then((response) => {
+  await textGen(`${prompts.detailedPrompt}${userMessage}`).then((response) => {
     console.log(response);
     ctx.reply(response);
   });
