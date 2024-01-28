@@ -1,3 +1,4 @@
+import fs from "fs";
 import "dotenv/config";
 import dotenv from "dotenv";
 import { Telegraf } from "telegraf";
@@ -44,10 +45,6 @@ const main = async function () {
       .collection("Users")
       .updateOne({ _id: userID }, { $set: updatedState });
   }
-
-  // Global variables
-  // let chatFromat = "text";
-  // let voiceType = "alloy"; // STUPID! HANDLE WITH DATABASE RECORDS!
 
   // Connect to bot (Move token to .env)
   const bot = new Telegraf(telegramToken);
@@ -163,15 +160,17 @@ const main = async function () {
 
   // Reply with voice message
   async function replyWithVoice(ctx, userMessage, voiceType) {
-    // console.log(voiceType);
     textGen(`${prompts.detailedPrompt}${userMessage}`).then(
       async (response) => {
         console.log(response);
-        audioGen(response, voiceType).then((response) => {
-          const filePath = response;
-          console.log(filePath);
-          ctx.telegram.sendVoice(ctx.chat.id, { source: filePath });
-        });
+        audioGen(response, voiceType)
+          .then(async (response) => {
+            const filePath = response;
+            console.log(filePath);
+            await ctx.telegram.sendVoice(ctx.chat.id, { source: filePath });
+            return filePath;
+          })
+          .then((filePath) => fs.unlinkSync(filePath));
       }
     );
   }
