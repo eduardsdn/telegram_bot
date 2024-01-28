@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { Telegraf } from "telegraf";
 import dotenv from "dotenv";
+import { Telegraf } from "telegraf";
 import { textGen, audioGen } from "./openai.js"; //openAI functions
 import { chooseChatFormatMenu, chooseVoiceMenu } from "./menus.js"; //Menus
 import { prompts } from "./prompts.js";
@@ -46,8 +46,8 @@ const main = async function () {
   }
 
   // Global variables
-  let chatFromat = "text";
-  let voiceType = "alloy"; // STUPID! HANDLE WITH DATABASE RECORDS!
+  // let chatFromat = "text";
+  // let voiceType = "alloy"; // STUPID! HANDLE WITH DATABASE RECORDS!
 
   // Connect to bot (Move token to .env)
   const bot = new Telegraf(telegramToken);
@@ -91,61 +91,45 @@ const main = async function () {
     const callbackData = ctx.callbackQuery.data;
     const chatData = ctx.chat;
 
-    // }
-    // CHECK FOR LOADING STATE FOR BUTTONS BUG
     switch (callbackData) {
       case "changeFormatVoice":
-        // changeChatFormat("voice");
         await updateUser(client, chatData.id, { chatFormat: "voice" });
         await ctx.answerCbQuery("Формат чата изменён на голосовые сообщения");
-        // console.log(chatFromat);
         break;
 
       case "changeFormatText":
-        // changeChatFormat("text");
         await updateUser(client, chatData.id, { chatFormat: "text" });
         await ctx.answerCbQuery("Формат чата изменён на текстовые сообщения");
-        // console.log(chatFromat);
         break;
 
       case "changeVoiceAlloy":
-        // changeVoiceType("alloy");
         await updateUser(client, chatData.id, { voice: "alloy" });
         await ctx.answerCbQuery("Голос изменён на Alloy");
-        // console.log(voiceType);
         break;
 
       case "changeVoiceEcho":
-        // changeVoiceType("echo");
         await updateUser(client, chatData.id, { voice: "echo" });
         await ctx.answerCbQuery("Голос изменён на Echo");
-        // console.log(voiceType);
         break;
+
       case "changeVoiceFable":
         await updateUser(client, chatData.id, { voice: "fable" });
         await ctx.answerCbQuery("Голос изменён на Fable");
-        // changeChatFormat("fable");
-        // console.log(voiceType);
         break;
 
       case "changeVoiceOnyx":
         await updateUser(client, chatData.id, { voice: "onyx" });
         await ctx.answerCbQuery("Голос изменён на Onyx");
-        // changeVoiceType("onyx");
-        // console.log(voiceType);
         break;
+
       case "changeVoiceNova":
-        // changeVoiceType("nova");
         await updateUser(client, chatData.id, { voice: "nova" });
         await ctx.answerCbQuery("Голос изменён на Нова");
-        // console.log(voiceType);
         break;
 
       case "changeVoiceShimmer":
-        // changeVoiceType("shimmer");
         await updateUser(client, chatData.id, { voice: "shimmer" });
         await ctx.answerCbQuery("Голос изменён на Шиммер");
-        // console.log(voiceType);
         break;
 
       default:
@@ -156,20 +140,30 @@ const main = async function () {
   // Listen to user messages and reply based on current chat format
   bot.on("message", async (ctx) => {
     const userMessage = ctx.update.message.text;
+    const chatData = ctx.chat;
     console.log(userMessage);
-    if (chatFromat === "text") {
+
+    const chatFormat = await findUser(client, chatData.id).then(
+      //get what chatFormat user has chosen
+      (result) => result.chatFormat
+    );
+    const voiceType = await findUser(client, chatData.id).then(
+      //get what voiceType user has chosen
+      (result) => result.voice
+    );
+
+    if (chatFormat === "text") {
+      //if format is text, reply with text
       await replyWithText(ctx, userMessage);
-    } else if (chatFromat === "voice") {
-      replyWithVoice(ctx, userMessage);
+    } else if (chatFormat === "voice") {
+      // if format is voice reply with voice message
+      replyWithVoice(ctx, userMessage, voiceType);
     }
   });
 
-  console.log(
-    await findUser(client, 164846581).then((result) => result.chatFormat)
-  );
-
   // Reply with voice message
-  async function replyWithVoice(ctx, userMessage) {
+  async function replyWithVoice(ctx, userMessage, voiceType) {
+    // console.log(voiceType);
     textGen(`${prompts.detailedPrompt}${userMessage}`).then(
       async (response) => {
         console.log(response);
@@ -191,15 +185,6 @@ const main = async function () {
       }
     );
   }
-
-  // Change chat Format
-  // async function changeChatFormat(format) {
-  //   chatFromat = format;
-  // }
-
-  // async function changeVoiceType(voice) {
-  //   voiceType = voice;
-  // }
 
   // Launch bot
   bot.launch();
