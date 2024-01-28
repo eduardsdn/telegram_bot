@@ -20,7 +20,7 @@ const main = async function () {
     await client.close();
   }
 
-  client.connect();
+  await client.connect();
 
   async function createUser(client, newUser) {
     // Create new user record
@@ -36,6 +36,13 @@ const main = async function () {
       .db("test_galleryGenius")
       .collection("Users")
       .findOne({ _id: userID });
+  }
+
+  async function updateUser(client, userID, updatedState) {
+    client
+      .db("test_galleryGenius")
+      .collection("Users")
+      .updateOne({ _id: userID }, { $set: updatedState });
   }
 
   // Global variables
@@ -65,6 +72,7 @@ const main = async function () {
       });
     } else return;
   });
+
   bot.command("info", async (ctx) => {
     await ctx.reply(
       "I am your art guide, please let me know the author, painting or anything related to art and I will provie you information"
@@ -81,54 +89,63 @@ const main = async function () {
   // Event handling for chooseChatFormatMenu buttons
   bot.on("callback_query", async (ctx) => {
     const callbackData = ctx.callbackQuery.data;
+    const chatData = ctx.chat;
 
     // }
     // CHECK FOR LOADING STATE FOR BUTTONS BUG
     switch (callbackData) {
       case "changeFormatVoice":
-        changeChatFormat("voice");
+        // changeChatFormat("voice");
+        await updateUser(client, chatData.id, { chatFormat: "voice" });
         await ctx.answerCbQuery("Формат чата изменён на голосовые сообщения");
-        console.log(chatFromat);
+        // console.log(chatFromat);
         break;
 
       case "changeFormatText":
-        changeChatFormat("text");
+        // changeChatFormat("text");
+        await updateUser(client, chatData.id, { chatFormat: "text" });
         await ctx.answerCbQuery("Формат чата изменён на текстовые сообщения");
-        console.log(chatFromat);
+        // console.log(chatFromat);
         break;
 
       case "changeVoiceAlloy":
-        changeVoiceType("alloy");
+        // changeVoiceType("alloy");
+        await updateUser(client, chatData.id, { voice: "alloy" });
         await ctx.answerCbQuery("Голос изменён на Alloy");
-        console.log(voiceType);
+        // console.log(voiceType);
         break;
 
       case "changeVoiceEcho":
-        changeVoiceType("echo");
+        // changeVoiceType("echo");
+        await updateUser(client, chatData.id, { voice: "echo" });
         await ctx.answerCbQuery("Голос изменён на Echo");
-        console.log(voiceType);
+        // console.log(voiceType);
         break;
       case "changeVoiceFable":
+        await updateUser(client, chatData.id, { voice: "fable" });
         await ctx.answerCbQuery("Голос изменён на Fable");
-        changeChatFormat("fable");
-        console.log(voiceType);
+        // changeChatFormat("fable");
+        // console.log(voiceType);
         break;
 
       case "changeVoiceOnyx":
+        await updateUser(client, chatData.id, { voice: "onyx" });
         await ctx.answerCbQuery("Голос изменён на Onyx");
-        changeVoiceType("onyx");
-        console.log(voiceType);
+        // changeVoiceType("onyx");
+        // console.log(voiceType);
         break;
       case "changeVoiceNova":
-        changeVoiceType("nova");
+        // changeVoiceType("nova");
+        await updateUser(client, chatData.id, { voice: "nova" });
         await ctx.answerCbQuery("Голос изменён на Нова");
-        console.log(voiceType);
+        // console.log(voiceType);
         break;
 
       case "changeVoiceShimmer":
-        changeVoiceType("shimmer");
+        // changeVoiceType("shimmer");
+        await updateUser(client, chatData.id, { voice: "shimmer" });
         await ctx.answerCbQuery("Голос изменён на Шиммер");
-        console.log(voiceType);
+        // console.log(voiceType);
         break;
 
       default:
@@ -146,6 +163,10 @@ const main = async function () {
       replyWithVoice(ctx, userMessage);
     }
   });
+
+  console.log(
+    await findUser(client, 164846581).then((result) => result.chatFormat)
+  );
 
   // Reply with voice message
   async function replyWithVoice(ctx, userMessage) {
@@ -172,16 +193,16 @@ const main = async function () {
   }
 
   // Change chat Format
-  async function changeChatFormat(format) {
-    chatFromat = format;
-  }
+  // async function changeChatFormat(format) {
+  //   chatFromat = format;
+  // }
 
-  async function changeVoiceType(voice) {
-    voiceType = voice;
-  }
+  // async function changeVoiceType(voice) {
+  //   voiceType = voice;
+  // }
 
   // Launch bot
   bot.launch();
 };
 
-main();
+await main();
