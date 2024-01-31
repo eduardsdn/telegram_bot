@@ -160,10 +160,10 @@ const main = async function () {
 
   // Reply with voice message
   async function replyWithVoice(ctx, userMessage, voiceType) {
-    textGen(`${prompts.detailedPrompt}${userMessage}`).then(
+    await textGen(`${prompts.detailedPrompt}${userMessage}`).then(
       async (response) => {
         console.log(response);
-        audioGen(response, voiceType)
+        await audioGen(response, voiceType)
           .then(async (response) => {
             const filePath = response;
             console.log(filePath);
