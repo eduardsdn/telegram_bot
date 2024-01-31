@@ -167,10 +167,11 @@ const main = async function () {
           .then(async (response) => {
             const filePath = response;
             console.log(filePath);
-            await ctx.telegram.sendVoice(ctx.chat.id, { source: filePath });
+            await ctx.telegram.sendVoice(ctx.chat.id, { source: filePath }); //Send vocie message from the file
             return filePath;
           })
-          .then((filePath) => fs.unlinkSync(filePath));
+          .then(async (filePath) => await fs.promises.unlink(filePath));
+        // then delete the file
       }
     );
   }
