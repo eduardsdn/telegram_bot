@@ -40,7 +40,7 @@ const main = async function () {
   }
 
   async function updateUser(client, userID, updatedState) {
-    client
+    await client
       .db("test_galleryGenius")
       .collection("Users")
       .updateOne({ _id: userID }, { $set: updatedState });
@@ -53,15 +53,15 @@ const main = async function () {
   bot.telegram.setMyCommands([
     // { command: "/start", description: "Welcome" },
     { command: "/info", description: "Get info about functionality" },
-    { command: "/format", description: "Change chat Format" },
-    { command: "/changevoice", description: "Change voice of voice messages" },
+    { command: "/format", description: "Change chat format" },
+    { command: "/changevoice", description: "Change voice for voice messages" },
   ]);
 
   // Handling commands
   bot.command("start", async (ctx) => {
     const chatData = ctx.chat;
     if ((await findUser(client, chatData.id)) === null) {
-      createUser(client, {
+      await createUser(client, {
         _id: chatData.id,
         userName: chatData.username,
         chatFormat: "text",
@@ -91,46 +91,46 @@ const main = async function () {
     switch (callbackData) {
       case "changeFormatVoice":
         await updateUser(client, chatData.id, { chatFormat: "voice" });
-        await ctx.answerCbQuery("Формат чата изменён на голосовые сообщения");
+        await ctx.answerCbQuery("You will now revieve voice messages");
         break;
 
       case "changeFormatText":
         await updateUser(client, chatData.id, { chatFormat: "text" });
-        await ctx.answerCbQuery("Формат чата изменён на текстовые сообщения");
+        await ctx.answerCbQuery("You will now revieve text messages");
         break;
 
       case "changeVoiceAlloy":
         await updateUser(client, chatData.id, { voice: "alloy" });
-        await ctx.answerCbQuery("Голос изменён на Alloy");
+        await ctx.answerCbQuery("Voice changed to Alloy");
         break;
 
       case "changeVoiceEcho":
         await updateUser(client, chatData.id, { voice: "echo" });
-        await ctx.answerCbQuery("Голос изменён на Echo");
+        await ctx.answerCbQuery("Voice changed to Echo");
         break;
 
       case "changeVoiceFable":
         await updateUser(client, chatData.id, { voice: "fable" });
-        await ctx.answerCbQuery("Голос изменён на Fable");
+        await ctx.answerCbQuery("Voice changed to Fable");
         break;
 
       case "changeVoiceOnyx":
         await updateUser(client, chatData.id, { voice: "onyx" });
-        await ctx.answerCbQuery("Голос изменён на Onyx");
+        await ctx.answerCbQuery("Voice changed to Onyx");
         break;
 
       case "changeVoiceNova":
         await updateUser(client, chatData.id, { voice: "nova" });
-        await ctx.answerCbQuery("Голос изменён на Нова");
+        await ctx.answerCbQuery("Voice changed to Нова");
         break;
 
       case "changeVoiceShimmer":
         await updateUser(client, chatData.id, { voice: "shimmer" });
-        await ctx.answerCbQuery("Голос изменён на Шиммер");
+        await ctx.answerCbQuery("Voice changed to Шиммер");
         break;
 
       default:
-        await ctx.answerCbQuery("Недействительная кнопка");
+        await ctx.answerCbQuery("Invalid button");
     }
   });
 
@@ -149,12 +149,13 @@ const main = async function () {
       (result) => result.voice
     );
 
+    ctx.reply("Please wait, I am coming up with the answer...");
     if (chatFormat === "text") {
       //if format is text, reply with text
       await replyWithText(ctx, userMessage);
     } else if (chatFormat === "voice") {
       // if format is voice reply with voice message
-      replyWithVoice(ctx, userMessage, voiceType);
+      await replyWithVoice(ctx, userMessage, voiceType);
     }
   });
 
