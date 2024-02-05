@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { OpenAI } from "openai";
-import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 import dotenv from "dotenv";
@@ -9,7 +8,6 @@ dotenv.config();
 
 const openAIkey = process.env.OPENAI_KEY;
 
-// openai (Move key to .env)
 const openai = new OpenAI({
   apiKey: openAIkey,
 });
@@ -27,7 +25,6 @@ const textGen = async function (userMessage) {
 let pathToSpeechFile = "";
 // generate auidio from generated text response
 const audioGen = async function (textForTranslation, voiceType) {
-  //   const file = fs.cre;
   console.log(textForTranslation);
   const audio = await openai.audio.speech.create({
     model: "tts-1",

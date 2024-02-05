@@ -13,12 +13,11 @@ const main = async function () {
   const mongodbKey = process.env.MONGODB_KEY;
 
   const client = new MongoClient(mongodbKey); // connect to database
+
   try {
     await client.connect();
   } catch (e) {
     console.log(e);
-  } finally {
-    await client.close();
   }
 
   await client.connect();
@@ -51,10 +50,9 @@ const main = async function () {
 
   // Defining command menu
   bot.telegram.setMyCommands([
-    // { command: "/start", description: "Welcome" },
-    { command: "/info", description: "Get info about functionality" },
+    { command: "/info", description: "See what I can do" },
     { command: "/format", description: "Change chat format" },
-    { command: "/changevoice", description: "Change voice for voice messages" },
+    { command: "/changevoice", description: "Change voice" },
   ]);
 
   // Handling commands
@@ -72,11 +70,10 @@ const main = async function () {
 
   bot.command("info", async (ctx) => {
     await ctx.reply(
-      "I am your art guide, please let me know the author, painting or anything related to art and I will provie you information"
+      "I am your art guide, please let me know the author, painting or anything related to art and I will tell you about it! I can send text and voice messages in different voices. Be sure to check the menu!"
     );
   });
   bot.command("format", async (ctx) => {
-    "Please choose how you want to recieve your information";
     await ctx.reply("Please pick chat format", chooseChatFormatMenu);
   });
   bot.command("changevoice", async (ctx) => {
@@ -152,10 +149,10 @@ const main = async function () {
     ctx.reply("Please wait, I am coming up with the answer...");
     if (chatFormat === "text") {
       //if format is text, reply with text
-      await replyWithText(ctx, userMessage);
+      replyWithText(ctx, userMessage);
     } else if (chatFormat === "voice") {
       // if format is voice reply with voice message
-      await replyWithVoice(ctx, userMessage, voiceType);
+      replyWithVoice(ctx, userMessage, voiceType);
     }
   });
 
