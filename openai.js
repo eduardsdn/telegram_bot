@@ -2,9 +2,13 @@ import "dotenv/config";
 import { OpenAI } from "openai";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
+import util from "util";
 import dotenv from "dotenv";
+import textToSpeech from "@google-cloud/text-to-speech";
 
 dotenv.config();
+
+const client = new textToSpeech.TextToSpeechClient();
 
 const openAIkey = process.env.OPENAI_KEY;
 
@@ -31,10 +35,27 @@ const audioGen = async function (textForTranslation, voiceType) {
     voice: voiceType,
     input: textForTranslation,
   });
+  console.log(audio);
   pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
   const buffer = Buffer.from(await audio.arrayBuffer());
   await fs.promises.writeFile(pathToSpeechFile, buffer);
   return pathToSpeechFile;
 };
 
-export { textGen, audioGen };
+const googleAudioGen = async function (textForTranslation) {
+  const request = {
+    input: { text: textForTranslation },
+    // Select the language and SSML voice gender (optional)
+    voice: { languageCode: "en-US", ssmlGender: "NEUTRAL" },
+    // select the type of audio encoding
+    audioConfig: { audioEncoding: "MP3" },
+  };
+
+  pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
+  const [response] = await client.synthesizeSpeech(request);
+  const writeFile = util.promisify(fs.writeFile);
+  await writeFile(pathToSpeechFile, response.audioContent, "binary");
+  return pathToSpeechFile;
+};
+
+export { textGen, audioGen, googleAudioGen };
