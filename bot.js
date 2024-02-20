@@ -2,7 +2,7 @@ import fs from "fs";
 import "dotenv/config";
 import dotenv from "dotenv";
 import { Telegraf } from "telegraf";
-import { textGen, audioGen, googleAudioGen } from "./openai.js"; //openAI functions
+import { textGen, audioGen } from "./openai.js"; //openAI functions
 import { chooseChatFormatMenu, chooseVoiceMenu } from "./menus.js"; //Menus
 import { prompts } from "./prompts.js";
 import { MongoClient } from "mongodb";
@@ -97,34 +97,34 @@ const main = async function () {
         break;
 
       case "changeVoiceAlloy":
-        await updateUser(client, chatData.id, { voice: "alloy" });
+        await updateUser(client, chatData.id, { voice: "ru-Ru-Wavenet-A" });
         await ctx.answerCbQuery("Voice changed to Alloy");
         break;
 
       case "changeVoiceEcho":
-        await updateUser(client, chatData.id, { voice: "echo" });
+        await updateUser(client, chatData.id, { voice: "ru-Ru-Wavenet-B" });
         await ctx.answerCbQuery("Voice changed to Echo");
         break;
 
       case "changeVoiceFable":
-        await updateUser(client, chatData.id, { voice: "fable" });
+        await updateUser(client, chatData.id, { voice: "ru-Ru-Wavenet-C" });
         await ctx.answerCbQuery("Voice changed to Fable");
         break;
 
       case "changeVoiceOnyx":
-        await updateUser(client, chatData.id, { voice: "onyx" });
+        await updateUser(client, chatData.id, { voice: "ru-Ru-Wavenet-D" });
         await ctx.answerCbQuery("Voice changed to Onyx");
         break;
 
       case "changeVoiceNova":
-        await updateUser(client, chatData.id, { voice: "nova" });
+        await updateUser(client, chatData.id, { voice: "ru-Ru-Wavenet-E" });
         await ctx.answerCbQuery("Voice changed to Нова");
         break;
 
-      case "changeVoiceShimmer":
-        await updateUser(client, chatData.id, { voice: "shimmer" });
-        await ctx.answerCbQuery("Voice changed to Шиммер");
-        break;
+      // case "changeVoiceShimmer":
+      //   await updateUser(client, chatData.id, { voice: "shimmer" });
+      //   await ctx.answerCbQuery("Voice changed to Шиммер");
+      //   break;
 
       default:
         await ctx.answerCbQuery("Invalid button");
@@ -161,7 +161,7 @@ const main = async function () {
     await textGen(`${prompts.detailedPrompt}${userMessage}`).then(
       async (response) => {
         console.log(response);
-        await googleAudioGen(response, voiceType)
+        await audioGen(response, voiceType)
           .then(async (response) => {
             const filePath = response;
             console.log(filePath);

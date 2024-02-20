@@ -27,26 +27,13 @@ const textGen = async function (userMessage) {
 };
 
 let pathToSpeechFile = "";
-// generate auidio from generated text response
-const audioGen = async function (textForTranslation, voiceType) {
-  console.log(textForTranslation);
-  const audio = await openai.audio.speech.create({
-    model: "tts-1",
-    voice: voiceType,
-    input: textForTranslation,
-  });
-  console.log(audio);
-  pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
-  const buffer = Buffer.from(await audio.arrayBuffer());
-  await fs.promises.writeFile(pathToSpeechFile, buffer);
-  return pathToSpeechFile;
-};
 
-const googleAudioGen = async function (textForTranslation) {
+// generate auidio from generated text response
+const audioGen = async function (textForTranslation, voiceName) {
   const request = {
     input: { text: textForTranslation },
     // Select the language and SSML voice gender (optional)
-    voice: { languageCode: "en-US", ssmlGender: "NEUTRAL" },
+    voice: { languageCode: "ru-RU", name: voiceName },
     // select the type of audio encoding
     audioConfig: { audioEncoding: "MP3" },
   };
@@ -58,4 +45,18 @@ const googleAudioGen = async function (textForTranslation) {
   return pathToSpeechFile;
 };
 
-export { textGen, audioGen, googleAudioGen };
+export { textGen, audioGen };
+
+// const audioGen = async function (textForTranslation, voiceType) {
+//   console.log(textForTranslation);
+//   const audio = await openai.audio.speech.create({
+//     model: "tts-1",
+//     voice: voiceType,
+//     input: textForTranslation,
+//   });
+//   console.log(audio);
+//   pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
+//   const buffer = Buffer.from(await audio.arrayBuffer());
+//   await fs.promises.writeFile(pathToSpeechFile, buffer);
+//   return pathToSpeechFile;
+// };

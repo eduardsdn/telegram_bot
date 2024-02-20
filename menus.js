@@ -10,7 +10,7 @@ const chooseVoiceMenu = Markup.inlineKeyboard([
   [{ text: "Fable 👨", callback_data: "changeVoiceFable" }],
   [{ text: "Onyx 👨", callback_data: "changeVoiceOnyx" }],
   [{ text: "Nova 👩", callback_data: "changeVoiceNova" }],
-  [{ text: "Shimmer 👩", callback_data: "changeVoiceShimmer" }],
+  // [{ text: "Shimmer 👩", callback_data: "changeVoiceShimmer" }],
 ]);
 
 export { chooseChatFormatMenu, chooseVoiceMenu };
