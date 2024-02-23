@@ -1,4 +1,6 @@
 import fs from "fs";
+import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import "dotenv/config";
 import dotenv from "dotenv";
 import { Telegraf } from "telegraf";
@@ -132,7 +134,7 @@ const main = async function () {
   });
 
   // Listen to user messages and reply based on current chat format
-  bot.on("message", async (ctx) => {
+  bot.on("text", async (ctx) => {
     const userMessage = ctx.update.message.text;
     const chatData = ctx.chat;
     console.log(userMessage);
@@ -154,6 +156,32 @@ const main = async function () {
       // if format is voice reply with voice message
       replyWithVoice(ctx, userMessage, voiceType);
     }
+  });
+
+  bot.on("photo", async (ctx) => {
+    const photoId = ctx.message.photo.pop().file_id;
+    const fileUrl = await ctx.telegram.getFileLink(photoId);
+
+    console.log(fileUrl);
+
+    let pathToImageFile = `./images/${uuidv4()}.jpeg`;
+    console.log(pathToImageFile);
+
+    const response = await axios({
+      method: "GET",
+      url: fileUrl,
+      responseType: "stream",
+    });
+
+    response.data
+      .pipe(fs.createWriteStream(pathToImageFile))
+      .on("finish", () => {
+        console.log(`Photo saved to ${pathToImageFile}`);
+      })
+      .on("error", (err) => {
+        console.error("Error saving the photo:", err);
+      });
+    // console.log(response.data);
   });
 
   // Reply with voice message

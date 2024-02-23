@@ -45,6 +45,8 @@ const audioGen = async function (textForTranslation, voiceName) {
   return pathToSpeechFile;
 };
 
+const readText = async function (photo) {};
+
 export { textGen, audioGen };
 
 // const audioGen = async function (textForTranslation, voiceType) {
