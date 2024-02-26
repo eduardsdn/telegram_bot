@@ -4,10 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import "dotenv/config";
 import dotenv from "dotenv";
 import { Telegraf } from "telegraf";
-import { textGen, audioGen } from "./openai.js"; //openAI functions
+import { textGen, audioGen, recognizeText } from "./openai.js"; //openAI functions
 import { chooseChatFormatMenu, chooseVoiceMenu } from "./menus.js"; //Menus
 import { prompts } from "./prompts.js";
 import { MongoClient } from "mongodb";
+import { rejects } from "assert";
 
 const main = async function () {
   dotenv.config(); //gey keys
@@ -159,13 +160,17 @@ const main = async function () {
   });
 
   bot.on("photo", async (ctx) => {
+    const chatData = ctx.chat;
+    const voiceType = await findUser(client, chatData.id).then(
+      //get what voiceType user has chosen
+      (result) => result.voice
+    );
+
     const photoId = ctx.message.photo.pop().file_id;
     const fileUrl = await ctx.telegram.getFileLink(photoId);
 
-    console.log(fileUrl);
-
-    let pathToImageFile = `./images/${uuidv4()}.jpeg`;
-    console.log(pathToImageFile);
+    let pathToImageFile = `./images/${uuidv4()}.jpg`;
+    // console.log(pathToImageFile);
 
     const response = await axios({
       method: "GET",
@@ -173,15 +178,24 @@ const main = async function () {
       responseType: "stream",
     });
 
-    response.data
+    await response.data
       .pipe(fs.createWriteStream(pathToImageFile))
-      .on("finish", () => {
-        console.log(`Photo saved to ${pathToImageFile}`);
+      .on("finish", async () => {
+        await recognizeText(pathToImageFile).then(
+          async (detection) =>
+            await audioGen(detection, voiceType).then(async (response) => {
+              ctx.reply(response);
+            })
+        );
       })
       .on("error", (err) => {
         console.error("Error saving the photo:", err);
       });
-    // console.log(response.data);
+
+    // const recogizedText = await recognizeText(pathToImageFile);
+
+    // console.log(recogizedText);
+    // await ctx.reply(recogizedText);
   });
 
   // Reply with voice message

@@ -5,13 +5,14 @@ import fs from "fs";
 import util from "util";
 import dotenv from "dotenv";
 import textToSpeech from "@google-cloud/text-to-speech";
+import vision from "@google-cloud/vision";
 
 dotenv.config();
 
-const client = new textToSpeech.TextToSpeechClient();
+const TTSclient = new textToSpeech.TextToSpeechClient();
+const VisionClient = new vision.ImageAnnotatorClient();
 
 const openAIkey = process.env.OPENAI_KEY;
-
 const openai = new OpenAI({
   apiKey: openAIkey,
 });
@@ -39,15 +40,22 @@ const audioGen = async function (textForTranslation, voiceName) {
   };
 
   pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
-  const [response] = await client.synthesizeSpeech(request);
+  const [response] = await TTSclient.synthesizeSpeech(request);
   const writeFile = util.promisify(fs.writeFile);
   await writeFile(pathToSpeechFile, response.audioContent, "binary");
   return pathToSpeechFile;
 };
 
-const readText = async function (photo) {};
+const recognizeText = async function (pathToImageFile) {
+  const [result] = await VisionClient.textDetection(pathToImageFile);
+  const detection = result.fullTextAnnotation.text;
 
-export { textGen, audioGen };
+  console.log(detection);
+  return detection;
+  // detections.forEach((text) => console.log(text));
+};
+
+export { textGen, audioGen, recognizeText };
 
 // const audioGen = async function (textForTranslation, voiceType) {
 //   console.log(textForTranslation);
