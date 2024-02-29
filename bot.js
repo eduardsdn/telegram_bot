@@ -6,7 +6,11 @@ import dotenv from "dotenv";
 import { Telegraf } from "telegraf";
 import { createUser, findUser, updateUser } from "./database.js";
 import { textGen, audioGen, recognizeText } from "./apiCalls.js"; //openAI functions
-import { chooseChatFormatMenu, chooseVoiceMenu } from "./menus.js"; //Menus
+import {
+  chooseChatFormatMenu,
+  chooseVoiceMenu,
+  chooseAnnotationLangMenu,
+} from "./menus.js"; //Menus
 import { prompts } from "./prompts.js";
 // import { rejects } from "assert";
 
@@ -22,16 +26,21 @@ const main = async function () {
     { command: "/info", description: "See what I can do" },
     { command: "/format", description: "Change chat format" },
     { command: "/changevoice", description: "Change voice" },
+    {
+      command: "/annotation",
+      description: "Change language of sign annotations",
+    },
   ]);
   // Handling commands
   bot.command("start", async (ctx) => {
     const chatData = ctx.chat;
-    if ((await findUser(client, chatData.id)) === null) {
-      await createUser(client, {
+    if ((await findUser(chatData.id)) === null) {
+      await createUser({
         _id: chatData.id,
         userName: chatData.username,
         chatFormat: "text",
-        voice: "alloy",
+        voice: "ru-Ru-Wavenet-B",
+        annotationLang: "ru-RU",
       });
     } else return;
   });
@@ -45,6 +54,12 @@ const main = async function () {
   });
   bot.command("changevoice", async (ctx) => {
     await ctx.reply("Please pick a voice", chooseVoiceMenu);
+  });
+  bot.command("annotation", async (ctx) => {
+    await ctx.reply(
+      "Please pick annotation language",
+      chooseAnnotationLangMenu
+    );
   });
 
   // Event handling for chooseChatFormatMenu buttons
@@ -86,6 +101,16 @@ const main = async function () {
       case "changeVoiceNova":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-E" });
         await ctx.answerCbQuery("Voice changed to Нова");
+        break;
+
+      case "changeAnnotationLangEng":
+        await updateUser(chatData.id, { annotationLang: "en-US" });
+        await ctx.answerCbQuery("Annotation language change to English");
+        break;
+
+      case "changeAnnotationLangRus":
+        await updateUser(chatData.id, { annotationLang: "ru-RU" });
+        await ctx.answerCbQuery("Annotation language change to English");
         break;
 
       default:
@@ -131,11 +156,16 @@ const main = async function () {
 
   bot.on("photo", async (ctx) => {
     const chatData = ctx.chat;
+    const voiceType = "";
 
     //get what voiceType user has chosen
-    const voiceType = await findUser(chatData.id).then(
-      (result) => result.voice
+    let annotationLang = await findUser(chatData.id).then(
+      (result) => result.annotationLang
     );
+    if (annotationLang === undefined) {
+      await updateUser(chatData.id, { annotationLang: "ru-RU" });
+      annotationLang = "ru-RU";
+    }
 
     // get link of the image on telegram servers
     const photoId = ctx.message.photo.pop().file_id;
@@ -155,15 +185,22 @@ const main = async function () {
     await response.data
       .pipe(fs.createWriteStream(pathToImageFile))
       .on("finish", async () => {
-        await recognizeText(pathToImageFile).then((detection) =>
-          replyWithVoice(ctx, detection, voiceType)
-        );
+        await recognizeText(pathToImageFile).then((detection) => {
+          replyWithVoice(ctx, detection, voiceType, annotationLang);
+        });
       });
   });
 
   // reply with voice message and delete audio file that has been sent
-  async function replyWithVoice(ctx, textForTranslation, voiceType) {
-    await audioGen(textForTranslation, voiceType)
+  async function replyWithVoice(
+    ctx,
+    textForTranslation,
+    voiceType,
+    annotationLang
+  ) {
+    console.log(annotationLang);
+    console.log(voiceType);
+    await audioGen(textForTranslation, voiceType, annotationLang)
       .then(async (response) => {
         const filePath = response;
         console.log(filePath);

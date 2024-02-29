@@ -28,11 +28,30 @@ const textGen = async function (userMessage) {
 };
 
 // generate audio from text and save the file, returns path to the audio file
-const audioGen = async function (textForTranslation, voiceName) {
+const audioGen = async function (
+  textForTranslation,
+  voiceName,
+  annotationLang
+) {
+  let langCode = "ru-RU";
+  console.log(`ANN LAN ${annotationLang}`);
+  if (annotationLang) {
+    langCode = annotationLang;
+    if (langCode === "ru-RU") {
+      console.log("picked russian");
+      voiceName = "ru-Ru-Wavenet-B";
+    } else if (langCode === "en-US") {
+      console.log("picked english");
+      voiceName = "en-US-Studio-Q";
+    }
+  }
+
+  console.log(langCode);
+  console.log(voiceName);
   const request = {
     input: { text: textForTranslation },
     // Select the language and SSML voice gender (optional)
-    voice: { languageCode: "ru-RU", name: voiceName },
+    voice: { languageCode: langCode, name: voiceName },
     // select the type of audio encoding
     audioConfig: { audioEncoding: "MP3" },
   };
@@ -48,7 +67,6 @@ const audioGen = async function (textForTranslation, voiceName) {
 const recognizeText = async function (pathToImageFile) {
   const [result] = await VisionClient.textDetection(pathToImageFile);
 
-  console.log(result);
   const detection = result.fullTextAnnotation.text;
 
   return detection;

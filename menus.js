@@ -12,5 +12,9 @@ const chooseVoiceMenu = Markup.inlineKeyboard([
   [{ text: "Nova 👩", callback_data: "changeVoiceNova" }],
   // [{ text: "Shimmer 👩", callback_data: "changeVoiceShimmer" }],
 ]);
+const chooseAnnotationLangMenu = Markup.inlineKeyboard([
+  [{ text: "English", callback_data: "changeAnnotationLangEng" }],
+  [{ text: "Русский", callback_data: "changeAnnotationLangRus" }],
+]);
 
-export { chooseChatFormatMenu, chooseVoiceMenu };
+export { chooseChatFormatMenu, chooseVoiceMenu, chooseAnnotationLangMenu };
