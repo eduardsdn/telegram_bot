@@ -190,7 +190,11 @@ const main = async function () {
       .pipe(fs.createWriteStream(pathToImageFile))
       .on("finish", async () => {
         await recognizeText(pathToImageFile).then((detection) => {
-          replyWithVoice(ctx, detection, voiceType, annotationLang);
+          // Recognize text from image
+          replyWithVoice(ctx, detection, voiceType, annotationLang).then(
+            // Generate audio from recognized text
+            fs.promises.unlink(pathToImageFile) // delete image file
+          );
         });
       });
   });
