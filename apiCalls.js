@@ -1,9 +1,10 @@
 import "dotenv/config";
-import { OpenAI } from "openai";
-import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv";
 import fs from "fs";
 import util from "util";
-import dotenv from "dotenv";
+import { v4 as uuidv4 } from "uuid";
+
+import { OpenAI } from "openai";
 import textToSpeech from "@google-cloud/text-to-speech";
 import vision from "@google-cloud/vision";
 
@@ -17,19 +18,16 @@ const openai = new OpenAI({
   apiKey: openAIkey,
 });
 
-// generate response to user message
+// generate text response to user message
 const textGen = async function (userMessage) {
   const completion = await openai.chat.completions.create({
     messages: [{ role: "user", content: userMessage }],
     model: "gpt-3.5-turbo",
   });
-  // console.log(completion.choices[0].message.content);
   return completion.choices[0].message.content;
 };
 
-let pathToSpeechFile = "";
-
-// generate auidio from generated text response
+// generate audio from text and save the file, returns path to the audio file
 const audioGen = async function (textForTranslation, voiceName) {
   const request = {
     input: { text: textForTranslation },
@@ -39,23 +37,26 @@ const audioGen = async function (textForTranslation, voiceName) {
     audioConfig: { audioEncoding: "MP3" },
   };
 
-  pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
+  const pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
   const [response] = await TTSclient.synthesizeSpeech(request);
   const writeFile = util.promisify(fs.writeFile);
   await writeFile(pathToSpeechFile, response.audioContent, "binary");
   return pathToSpeechFile;
 };
 
+// return text annotation from an image
 const recognizeText = async function (pathToImageFile) {
   const [result] = await VisionClient.textDetection(pathToImageFile);
+
+  console.log(result);
   const detection = result.fullTextAnnotation.text;
 
-  console.log(detection);
   return detection;
-  // detections.forEach((text) => console.log(text));
 };
 
 export { textGen, audioGen, recognizeText };
+
+// audiGen openAI version
 
 // const audioGen = async function (textForTranslation, voiceType) {
 //   console.log(textForTranslation);
