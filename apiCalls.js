@@ -73,19 +73,3 @@ const recognizeText = async function (pathToImageFile) {
 };
 
 export { textGen, audioGen, recognizeText };
-
-// audiGen openAI version
-
-// const audioGen = async function (textForTranslation, voiceType) {
-//   console.log(textForTranslation);
-//   const audio = await openai.audio.speech.create({
-//     model: "tts-1",
-//     voice: voiceType,
-//     input: textForTranslation,
-//   });
-//   console.log(audio);
-//   pathToSpeechFile = `./audio/${uuidv4()}.mp3`;
-//   const buffer = Buffer.from(await audio.arrayBuffer());
-//   await fs.promises.writeFile(pathToSpeechFile, buffer);
-//   return pathToSpeechFile;
-// };

@@ -157,16 +157,20 @@ const main = async function () {
   bot.on("photo", async (ctx) => {
     const chatData = ctx.chat;
     const voiceType = "";
+    // defining as empty string to pass to replyWithVoice and then to audioGen where it will be assign a value based
+    // on chosen annotation language
 
-    //get what voiceType user has chosen
+    //get what annotation language user has chosen
     let annotationLang = await findUser(chatData.id).then(
       (result) => result.annotationLang
     );
+    // if there is no record of annotation language create it and default to "ru-RU"
     if (annotationLang === undefined) {
       await updateUser(chatData.id, { annotationLang: "ru-RU" });
       annotationLang = "ru-RU";
     }
 
+    ctx.reply("Please wait, I am coming up with the answer...");
     // get link of the image on telegram servers
     const photoId = ctx.message.photo.pop().file_id;
     const fileUrl = await ctx.telegram.getFileLink(photoId);

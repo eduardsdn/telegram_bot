@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const mongodbKey = process.env.MONGODB_KEY;
 
-const client = new MongoClient(mongodbKey); // connect to database
+const client = new MongoClient(mongodbKey);
 
 // Connnect to database and catch errors
 try {
