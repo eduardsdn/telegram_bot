@@ -23,12 +23,12 @@ const main = async function () {
 
   // Defining command menu
   bot.telegram.setMyCommands([
-    { command: "/info", description: "See what I can do" },
-    { command: "/format", description: "Change chat format" },
-    { command: "/changevoice", description: "Change voice" },
+    { command: "/info", description: "Что я умею" },
+    { command: "/format", description: "Поменять формат чата" },
+    { command: "/changevoice", description: "Поменять голос" },
     {
       command: "/annotation",
-      description: "Change language of sign annotations",
+      description: "Поменять язык озвучивания",
     },
   ]);
   // Handling commands
@@ -50,16 +50,13 @@ const main = async function () {
     );
   });
   bot.command("format", async (ctx) => {
-    await ctx.reply("Please pick chat format", chooseChatFormatMenu);
+    await ctx.reply("Выберите формат чата", chooseChatFormatMenu);
   });
   bot.command("changevoice", async (ctx) => {
-    await ctx.reply("Please pick a voice", chooseVoiceMenu);
+    await ctx.reply("Выберите голос", chooseVoiceMenu);
   });
   bot.command("annotation", async (ctx) => {
-    await ctx.reply(
-      "Please pick annotation language",
-      chooseAnnotationLangMenu
-    );
+    await ctx.reply("Выберите язык озвучивания", chooseAnnotationLangMenu);
   });
 
   // Event handling for chooseChatFormatMenu buttons
@@ -70,47 +67,47 @@ const main = async function () {
     switch (callbackData) {
       case "changeFormatVoice":
         await updateUser(chatData.id, { chatFormat: "voice" });
-        await ctx.answerCbQuery("You will now revieve voice messages");
+        await ctx.answerCbQuery("Вы будете получать голосовые сообщения");
         break;
 
       case "changeFormatText":
         await updateUser(chatData.id, { chatFormat: "text" });
-        await ctx.answerCbQuery("You will now revieve text messages");
+        await ctx.answerCbQuery("Вы будете получать текстовые сообщения");
         break;
 
       case "changeVoiceAlloy":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-A" });
-        await ctx.answerCbQuery("Voice changed to Alloy");
+        await ctx.answerCbQuery("Выбран голос Alloy");
         break;
 
       case "changeVoiceEcho":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-B" });
-        await ctx.answerCbQuery("Voice changed to Echo");
+        await ctx.answerCbQuery("Выбран голос Echo");
         break;
 
       case "changeVoiceFable":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-C" });
-        await ctx.answerCbQuery("Voice changed to Fable");
+        await ctx.answerCbQuery("Выбран голос Fable");
         break;
 
       case "changeVoiceOnyx":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-D" });
-        await ctx.answerCbQuery("Voice changed to Onyx");
+        await ctx.answerCbQuery("Выбран голос Onyx");
         break;
 
       case "changeVoiceNova":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-E" });
-        await ctx.answerCbQuery("Voice changed to Нова");
+        await ctx.answerCbQuery("Выбран голос Нова");
         break;
 
       case "changeAnnotationLangEng":
         await updateUser(chatData.id, { annotationLang: "en-US" });
-        await ctx.answerCbQuery("Annotation language change to English");
+        await ctx.answerCbQuery("Выбран язык озвучивания: английский");
         break;
 
       case "changeAnnotationLangRus":
         await updateUser(chatData.id, { annotationLang: "ru-RU" });
-        await ctx.answerCbQuery("Annotation language change to English");
+        await ctx.answerCbQuery("Выбран язык озвучивания: русский");
         break;
 
       default:
@@ -133,7 +130,7 @@ const main = async function () {
       (result) => result.voice
     );
 
-    ctx.reply("Please wait, I am coming up with the answer...");
+    ctx.reply("Пожалуйста подождите, я думаю над ответом... ");
     if (chatFormat === "text") {
       //if format is text, reply with text
       // generate response from user message and send back response as text message
@@ -170,7 +167,7 @@ const main = async function () {
       annotationLang = "ru-RU";
     }
 
-    ctx.reply("Please wait, I am coming up with the answer...");
+    ctx.reply("Пожалуйста подождите, я думаю над ответом... ");
     // get link of the image on telegram servers
     const photoId = ctx.message.photo.pop().file_id;
     const fileUrl = await ctx.telegram.getFileLink(photoId);

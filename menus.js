@@ -1,8 +1,8 @@
 import { Markup } from "telegraf";
 
 const chooseChatFormatMenu = Markup.inlineKeyboard([
-  [{ text: "Text 💬", callback_data: "changeFormatText" }],
-  [{ text: "Voice 🗣", callback_data: "changeFormatVoice" }],
+  [{ text: "Текстовые сообщения 💬", callback_data: "changeFormatText" }],
+  [{ text: "Голосовые сообщения 🗣", callback_data: "changeFormatVoice" }],
 ]);
 const chooseVoiceMenu = Markup.inlineKeyboard([
   [{ text: "Alloy 👨", callback_data: "changeVoiceAlloy" }],
@@ -13,7 +13,7 @@ const chooseVoiceMenu = Markup.inlineKeyboard([
   // [{ text: "Shimmer 👩", callback_data: "changeVoiceShimmer" }],
 ]);
 const chooseAnnotationLangMenu = Markup.inlineKeyboard([
-  [{ text: "English", callback_data: "changeAnnotationLangEng" }],
+  [{ text: "Английский", callback_data: "changeAnnotationLangEng" }],
   [{ text: "Русский", callback_data: "changeAnnotationLangRus" }],
 ]);
 

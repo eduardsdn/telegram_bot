@@ -33,24 +33,21 @@ const audioGen = async function (
   voiceName,
   annotationLang
 ) {
-  let langCode = "ru-RU";
-  console.log(`ANN LAN ${annotationLang}`);
+  let langCode = "ru-RU"; // define default language code which is used for voice messages (only Russian)
+
   if (annotationLang) {
-    langCode = annotationLang;
+    // if this function is called for image annotation (i.e. annotationLang prop has been passed)
+    langCode = annotationLang; // change the language code accordingly
     if (langCode === "ru-RU") {
-      console.log("picked russian");
-      voiceName = "ru-Ru-Wavenet-B";
+      voiceName = "ru-Ru-Wavenet-B"; //
     } else if (langCode === "en-US") {
-      console.log("picked english");
       voiceName = "en-US-Studio-Q";
     }
   }
 
-  console.log(langCode);
-  console.log(voiceName);
+  // define a request for tts api
   const request = {
     input: { text: textForTranslation },
-    // Select the language and SSML voice gender (optional)
     voice: { languageCode: langCode, name: voiceName },
     // select the type of audio encoding
     audioConfig: { audioEncoding: "MP3" },
