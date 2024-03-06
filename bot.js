@@ -10,6 +10,7 @@ import {
   chooseChatFormatMenu,
   chooseVoiceMenu,
   chooseAnnotationLangMenu,
+  chooseImageRecognitionMenu,
 } from "./menus.js"; //Menus
 import { prompts } from "./prompts.js";
 // import { rejects } from "assert";
@@ -29,6 +30,10 @@ const main = async function () {
     {
       command: "/annotation",
       description: "Поменять язык озвучивания",
+    },
+    {
+      command: "/image",
+      description: "Поменять режим распознавание изображения",
     },
   ]);
   // Handling commands
@@ -57,6 +62,12 @@ const main = async function () {
   });
   bot.command("annotation", async (ctx) => {
     await ctx.reply("Выберите язык озвучивания", chooseAnnotationLangMenu);
+  });
+  bot.command("image", async (ctx) => {
+    await ctx.reply(
+      "Выберите режим распознавания изображения",
+      chooseImageRecognitionMenu
+    );
   });
 
   // Event handling for chooseChatFormatMenu buttons
@@ -108,6 +119,16 @@ const main = async function () {
       case "changeAnnotationLangRus":
         await updateUser(chatData.id, { annotationLang: "ru-RU" });
         await ctx.answerCbQuery("Выбран язык озвучивания: русский");
+        break;
+
+      case "changeImgRecAnnotation":
+        await updateUser(chatData.id, { imgRecMode: "annotation" });
+        await ctx.answerCbQuery("Вы будете получать информацию");
+        break;
+
+      case "changeImgRecGetGuide":
+        await updateUser(chatData.id, { imgRecMode: "guide" });
+        await ctx.answerCbQuery("Вы будете получать озвучку");
         break;
 
       default:

@@ -16,5 +16,14 @@ const chooseAnnotationLangMenu = Markup.inlineKeyboard([
   [{ text: "Английский", callback_data: "changeAnnotationLangEng" }],
   [{ text: "Русский", callback_data: "changeAnnotationLangRus" }],
 ]);
+const chooseImageRecognitionMenu = Markup.inlineKeyboard([
+  [{ text: "Получать информацию", callback_data: "changeImgRecAnnotation" }],
+  [{ text: "Получать озвучку", callback_data: "changeImgRecGetGuide" }],
+]);
 
-export { chooseChatFormatMenu, chooseVoiceMenu, chooseAnnotationLangMenu };
+export {
+  chooseChatFormatMenu,
+  chooseVoiceMenu,
+  chooseAnnotationLangMenu,
+  chooseImageRecognitionMenu,
+};
