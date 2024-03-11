@@ -64,9 +64,12 @@ const audioGen = async function (
 const recognizeText = async function (pathToImageFile) {
   const [result] = await VisionClient.textDetection(pathToImageFile);
 
-  const detection = result.fullTextAnnotation.text;
-
-  return detection;
+  if (result.fullTextAnnotation === null) {
+    return null;
+  } else {
+    const detection = result.fullTextAnnotation.text;
+    return detection;
+  }
 };
 
 export { textGen, audioGen, recognizeText };

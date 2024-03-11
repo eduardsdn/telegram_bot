@@ -122,12 +122,12 @@ const main = async function () {
         break;
 
       case "changeImgRecAnnotation":
-        await updateUser(chatData.id, { imgRecMode: "annotation" });
+        await updateUser(chatData.id, { imgRecMode: "guide" });
         await ctx.answerCbQuery("Вы будете получать информацию");
         break;
 
       case "changeImgRecGetGuide":
-        await updateUser(chatData.id, { imgRecMode: "guide" });
+        await updateUser(chatData.id, { imgRecMode: "annotation" });
         await ctx.answerCbQuery("Вы будете получать озвучку");
         break;
 
@@ -155,24 +155,60 @@ const main = async function () {
     if (chatFormat === "text") {
       //if format is text, reply with text
       // generate response from user message and send back response as text message
-      await textGen(`${prompts.detailedPrompt}${userMessage}`).then(
-        (response) => {
-          console.log(response);
-          ctx.reply(response);
-        }
-      );
+      await textGen(`${prompts.mainPrompt}${userMessage}`).then((response) => {
+        console.log(response);
+        ctx.reply(response);
+      });
     } else if (chatFormat === "voice") {
       // if format is voice reply with voice message
       // generate response from user message (see replyWith voice, it generates audio file, sends the voice message and then deletes the file)
-      await textGen(`${prompts.detailedPrompt}${userMessage}`).then(
-        (response) => {
-          replyWithVoice(ctx, response, voiceType);
-        }
-      );
+      await textGen(`${prompts.mainPrompt}${userMessage}`).then((response) => {
+        replyWithVoice(ctx, response, voiceType);
+      });
     }
   });
 
   bot.on("photo", async (ctx) => {
+    const chatData = ctx.chat;
+    let imgRecMode = await findUser(chatData.id).then(
+      // get what image recognition mode the user has chosen
+      (result) => result.imgRecMode
+    );
+    if (imgRecMode === undefined) {
+      // if there is no record of image recognition mode create it and default to "annotaion"
+      await updateUser(chatData.id, { annotationLang: "annotation" });
+      annotationLang = "annotation";
+    }
+
+    console.log(imgRecMode);
+
+    if (imgRecMode === "annotation") {
+      onPhotoReplyWithAnnotation(ctx);
+    } else if (imgRecMode === "guide") {
+      onPhotoReplyWithGuide(ctx);
+    }
+  });
+
+  // reply with voice message and delete audio file that has been sent
+  async function replyWithVoice(
+    ctx,
+    textForTranslation,
+    voiceType,
+    annotationLang
+  ) {
+    console.log(annotationLang);
+    console.log(voiceType);
+    await audioGen(textForTranslation, voiceType, annotationLang)
+      .then(async (response) => {
+        const filePath = response;
+        console.log(filePath);
+        await ctx.telegram.sendVoice(ctx.chat.id, { source: filePath }); //Send vocie message from the file
+        return filePath;
+      })
+      .then(async (filePath) => await fs.promises.unlink(filePath)); // then delete the file
+  }
+
+  async function onPhotoReplyWithAnnotation(ctx) {
     const chatData = ctx.chat;
     const voiceType = "";
     // defining as empty string to pass to replyWithVoice and then to audioGen where it will be assign a value based
@@ -208,32 +244,53 @@ const main = async function () {
       .pipe(fs.createWriteStream(pathToImageFile))
       .on("finish", async () => {
         await recognizeText(pathToImageFile).then((detection) => {
-          // Recognize text from image
-          replyWithVoice(ctx, detection, voiceType, annotationLang).then(
-            // Generate audio from recognized text
-            fs.promises.unlink(pathToImageFile) // delete image file
-          );
+          if (detection === null) {
+            ctx.reply("no text");
+          } else {
+            // Recognize text from image
+            replyWithVoice(ctx, detection, voiceType, annotationLang).then(
+              // Generate audio from recognized text
+              fs.promises.unlink(pathToImageFile) // delete image file
+            );
+          }
         });
       });
-  });
+  }
 
-  // reply with voice message and delete audio file that has been sent
-  async function replyWithVoice(
-    ctx,
-    textForTranslation,
-    voiceType,
-    annotationLang
-  ) {
-    console.log(annotationLang);
-    console.log(voiceType);
-    await audioGen(textForTranslation, voiceType, annotationLang)
-      .then(async (response) => {
-        const filePath = response;
-        console.log(filePath);
-        await ctx.telegram.sendVoice(ctx.chat.id, { source: filePath }); //Send vocie message from the file
-        return filePath;
-      })
-      .then(async (filePath) => await fs.promises.unlink(filePath)); // then delete the file
+  async function onPhotoReplyWithGuide(ctx) {
+    const chatData = ctx.chat;
+    const voiceType = "";
+
+    const annotationLang = "ru-RU";
+
+    ctx.reply("Пожалуйста подождите, я думаю над ответом... ");
+
+    const photoId = ctx.message.photo.pop().file_id;
+    const fileUrl = await ctx.telegram.getFileLink(photoId);
+
+    const response = await axios({
+      method: "GET",
+      url: fileUrl,
+      responseType: "stream",
+    });
+
+    let pathToImageFile = `./images/${uuidv4()}.jpg`;
+
+    await response.data
+      .pipe(fs.createWriteStream(pathToImageFile))
+      .on("finish", async () => {
+        await recognizeText(pathToImageFile).then(async (detection) => {
+          await textGen(`${prompts.imageRecPrompt}${detection}`)
+            .then((response) =>
+              replyWithVoice(ctx, response, voiceType, annotationLang)
+            )
+            .then(
+              // Generate audio from recognized text
+              fs.promises.unlink(pathToImageFile) // delete image file
+            )
+            .catch((err) => console.log(err));
+        });
+      });
   }
 
   // Launch bot
