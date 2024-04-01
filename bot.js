@@ -12,11 +12,10 @@ import {
   chooseAnnotationLangMenu,
   chooseImageRecognitionMenu,
 } from "./menus.js"; //Menus
-import { prompts } from "./prompts.js";
-// import { rejects } from "assert";
+import { promptsText, commandsText } from "./text.js";
 
 const main = async function () {
-  dotenv.config(); //gey keys
+  dotenv.config(); //get keys
   const telegramToken = process.env.TELEGRAM_TOKEN;
 
   // Connect to bot
@@ -25,20 +24,22 @@ const main = async function () {
   // Defining command menu
   bot.telegram.setMyCommands([
     { command: "/info", description: "Что я умею" },
-    { command: "/format", description: "Поменять формат чата" },
-    { command: "/changevoice", description: "Поменять голос" },
+    { command: "/replyformat", description: "Поменять формат чата" },
+    { command: "/voice", description: "Поменять голос" },
     {
-      command: "/annotation",
+      command: "/language",
       description: "Поменять язык озвучивания",
     },
     {
-      command: "/image",
+      command: "/mode",
       description: "Поменять режим распознавание изображения",
     },
   ]);
   // Handling commands
   bot.command("start", async (ctx) => {
     const chatData = ctx.chat;
+    ctx.sendMessage(commandsText.start);
+    ctx.sendMessage(commandsText.info);
     if ((await findUser(chatData.id)) === null) {
       await createUser({
         _id: chatData.id,
@@ -50,20 +51,18 @@ const main = async function () {
     } else return;
   });
   bot.command("info", async (ctx) => {
-    await ctx.reply(
-      "I am your art guide, please let me know the author, painting or anything related to art and I will tell you about it! I can send text and voice messages in different voices. Be sure to check the menu!"
-    );
+    await ctx.sendMessage(commandsText.info);
   });
-  bot.command("format", async (ctx) => {
+  bot.command("replyformat", async (ctx) => {
     await ctx.reply("Выберите формат чата", chooseChatFormatMenu);
   });
-  bot.command("changevoice", async (ctx) => {
+  bot.command("voice", async (ctx) => {
     await ctx.reply("Выберите голос", chooseVoiceMenu);
   });
-  bot.command("annotation", async (ctx) => {
+  bot.command("language", async (ctx) => {
     await ctx.reply("Выберите язык озвучивания", chooseAnnotationLangMenu);
   });
-  bot.command("image", async (ctx) => {
+  bot.command("mode", async (ctx) => {
     await ctx.reply(
       "Выберите режим распознавания изображения",
       chooseImageRecognitionMenu
@@ -88,22 +87,22 @@ const main = async function () {
 
       case "changeVoiceAlloy":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-A" });
-        await ctx.answerCbQuery("Выбран голос Alloy");
+        await ctx.answerCbQuery("Выбран голос Аллой");
         break;
 
       case "changeVoiceEcho":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-B" });
-        await ctx.answerCbQuery("Выбран голос Echo");
+        await ctx.answerCbQuery("Выбран голос Эхо");
         break;
 
       case "changeVoiceFable":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-C" });
-        await ctx.answerCbQuery("Выбран голос Fable");
+        await ctx.answerCbQuery("Выбран голос Фейбл");
         break;
 
       case "changeVoiceOnyx":
         await updateUser(chatData.id, { voice: "ru-Ru-Wavenet-D" });
-        await ctx.answerCbQuery("Выбран голос Onyx");
+        await ctx.answerCbQuery("Выбран голос Оникс");
         break;
 
       case "changeVoiceNova":
@@ -124,11 +123,17 @@ const main = async function () {
       case "changeImgRecAnnotation":
         await updateUser(chatData.id, { imgRecMode: "guide" });
         await ctx.answerCbQuery("Вы будете получать информацию");
+        await ctx.reply(
+          "Вы будете получать информацию, отправьте фото или введите название картины"
+        );
         break;
 
       case "changeImgRecGetGuide":
         await updateUser(chatData.id, { imgRecMode: "annotation" });
         await ctx.answerCbQuery("Вы будете получать озвучку");
+        await ctx.reply(
+          "Вы будете получать озвучку. Если вы хотите поменять язык озвучки использвуйте комманду /language"
+        );
         break;
 
       default:
@@ -155,16 +160,20 @@ const main = async function () {
     if (chatFormat === "text") {
       //if format is text, reply with text
       // generate response from user message and send back response as text message
-      await textGen(`${prompts.mainPrompt}${userMessage}`).then((response) => {
-        console.log(response);
-        ctx.reply(response);
-      });
+      await textGen(`${promptsText.mainPrompt}${userMessage}`).then(
+        (response) => {
+          console.log(response);
+          ctx.reply(response);
+        }
+      );
     } else if (chatFormat === "voice") {
       // if format is voice reply with voice message
       // generate response from user message (see replyWith voice, it generates audio file, sends the voice message and then deletes the file)
-      await textGen(`${prompts.mainPrompt}${userMessage}`).then((response) => {
-        replyWithVoice(ctx, response, voiceType);
-      });
+      await textGen(`${promptsText.mainPrompt}${userMessage}`).then(
+        (response) => {
+          replyWithVoice(ctx, response, voiceType);
+        }
+      );
     }
   });
 
@@ -280,15 +289,20 @@ const main = async function () {
       .pipe(fs.createWriteStream(pathToImageFile))
       .on("finish", async () => {
         await recognizeText(pathToImageFile).then(async (detection) => {
-          await textGen(`${prompts.imageRecPrompt}${detection}`)
-            .then((response) =>
-              replyWithVoice(ctx, response, voiceType, annotationLang)
-            )
-            .then(
-              // Generate audio from recognized text
-              fs.promises.unlink(pathToImageFile) // delete image file
-            )
-            .catch((err) => console.log(err));
+          if (detection === null) {
+            ctx.reply("Пожалуйста, предоставьте фото с текстом");
+            fs.promises.unlink(pathToImageFile);
+          } else {
+            await textGen(`${promptsText.imageRecPrompt}${detection}`)
+              .then((response) =>
+                replyWithVoice(ctx, response, voiceType, annotationLang)
+              )
+              .then(
+                // Generate audio from recognized text
+                fs.promises.unlink(pathToImageFile) // delete image file
+              )
+              .catch((err) => console.log(err));
+          }
         });
       });
   }
